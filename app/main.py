@@ -20,7 +20,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import eval
+from app.api.routes import eval,health
 from app.config.config import get_settings
 from app.utils.logger import get_logger, setup_logging
 
@@ -70,6 +70,7 @@ app.add_middleware(
 
 
 # Include routers
+app.include_router(health.router)
 app.include_router(eval.router)
 
 
