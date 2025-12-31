@@ -1,3 +1,70 @@
-.env
-__pycache__
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
 venv/
+.venv/
+ENV/
+env/
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.*
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Database
+*.sqlite3
+
+# Misc
+*.pem
+*.key
+*.crt
+
+# Local config
+instance/
+
+# Ignore local test artifacts
+tmp/
+
+# Keep config/ and app/ in source control
+# (Add more project-specific ignores below if needed)

@@ -1,51 +1,41 @@
-# ==================================================
-# RAG Q&A System - Production Dockerfile
-# ==================================================
-
-# Build stage
 FROM python:3.13-slim
 
-WORKDIR /app
+ARG APP_HOME=/evaluation-service
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=$APP_HOME
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR $APP_HOME
 
-# Copy requirements first for better caching
+# Copy requirements first for cache-friendly builds
 COPY requirements.txt .
 
-# install dependencies
+# Install build deps, install Python deps, then remove build deps in the same RUN
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y --auto-remove build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Create non-root user for security
+# Create app user / group
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
+# Copy application files
+COPY app/ $APP_HOME
+COPY configs/ $APP_HOME/configs
 
-# Copy application code
-COPY app/ ./app/
-
-COPY configs/ ./configs/
-
-# Set ownership to non-root user
-RUN chown -R appuser:appgroup /app
+# Fix ownership (use APP_HOME, not /app)
+RUN chown -R appuser:appgroup $APP_HOME
 
 # Switch to non-root user
 USER appuser
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app
-
-# Expose port
 EXPOSE 8000
 
-# Health check
+# Healthcheck using Python stdlib (no extra deps required)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')" || exit 1
+  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').getcode()==200 else 1)"
 
-# Run application
+# Run the app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
