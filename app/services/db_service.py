@@ -17,8 +17,24 @@ settings = get_settings()
 logger = get_logger(__name__)
 
 def get_sqlite_db(db_path: str, enable_foreign_keys: bool = True) -> sqlite3.Connection:
-    
-    path = Path(db_path) if db_path else settings.database_url
+    """Get a SQLite database connection.
+    Args:
+        db_path (str): Path to the SQLite database file.
+        enable_foreign_keys (bool): Whether to enable foreign key constraints. Defaults to True.
+    Returns:
+        sqlite3.Connection: SQLite database connection instance.
+    """
+
+    db_value = db_path or settings.database_url
+   
+    path = Path(db_value)
+
+    # Ensure parent directory exists (create folder if missing)
+    parent = path.parent
+    if parent and not parent.exists():
+        parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Created database directory at {parent}")
+
     conn = sqlite3.connect(str(path), detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
     if enable_foreign_keys:
@@ -96,8 +112,7 @@ class DatabaseService:
             conn.close()
 
     def create_event(self,eval_request:EvaluationRequest):
-        def create_event(self, eval_request: EvaluationRequest) -> str:
-            """
+        """
             Create a new evaluation event in the database.
             This method generates a unique event ID, constructs an EvaluationEvent object
             from the provided evaluation request, and persists it to the database using

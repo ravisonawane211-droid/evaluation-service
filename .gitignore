@@ -54,6 +54,8 @@ docker-compose.override.yml
 
 # Database
 *.sqlite3
+db/
+*.db
 
 # Misc
 *.pem
