@@ -9,6 +9,8 @@ from app.utils.logger import get_logger
 from app.schemas.evaluation_event import EvaluationEvent
 from app.schemas.evaluation_request import EvaluationRequest
 from app.schemas.evaluation_metric import EvaluationMetric
+from app.schemas.eval_metric import EvalMetric
+from app.schemas.app_config import AppConfig
 import pandas as pd
 from typing import Any
 import json
@@ -202,7 +204,7 @@ class DatabaseService:
             raise e
 
 
-    def save_metrics(self,event_id,scores:dict[str, Any]):
+    def save_metrics(self,event_id:str,scores:dict[str, Any],eval_request:EvaluationRequest):
         """
             Save evaluation metrics to the database.
             This method takes a dictionary of metric scores and stores them as individual
@@ -228,6 +230,8 @@ class DatabaseService:
                 metrics.append(EvaluationMetric(
                     id=str(uuid.uuid4()),
                     event_id=event_id,
+                    question=eval_request.question,
+                    answer=eval_request.answer,
                     metric_name=k,
                     metric_value=v
                     ))
@@ -240,4 +244,29 @@ class DatabaseService:
             logger.info(f"Saved metrics for event_id: {event_id}")
         except Exception as e:
             logger.error(f"error while saving metrics in evaluation_metric {e}")
+            raise e
+        
+    def get_metrics(self, app_name:str):
+        """
+        Retrieve evaluation metrics for a specified application name from the database.
+        Args:
+            app_name (str): The name of the application for which to retrieve evaluation metrics.
+        Returns:
+            List[EvalMetric]: A list of evaluation metrics associated with the specified application name.
+        """
+        logger.info(f"fetching metrics for app_name : {app_name}")
+        try:
+            query = """
+                SELECT DISTINCT ee.project_id,ee.environment,em.question,em.answer,em.metric_name, em.metric_value
+                FROM evaluation_metric em
+                JOIN evaluation_event ee ON em.event_id = ee.id
+                WHERE ee.project_id = ? and ee.status='COMPLETED'
+            """
+            cursor = self.conn.execute(query, (app_name,))
+            metrics = cursor.fetchall()
+
+            logger.info(f"Fetched {len(metrics)} metrics for app_name : {app_name}")
+            return metrics
+        except Exception as e:
+            logger.error(f"error while fetching metrics for app_name {app_name} : {e}")
             raise e

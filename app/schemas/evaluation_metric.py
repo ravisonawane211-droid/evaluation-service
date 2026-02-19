@@ -4,5 +4,7 @@ class EvaluationMetric(BaseModel):
     __tablename__ = "evaluation_metric"
     id:str
     event_id:str
+    question:str 
+    answer:str
     metric_name:str
     metric_value:float

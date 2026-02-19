@@ -36,8 +36,8 @@ htmlcov/
 logs/
 
 # Environment variables
-.env
-.env.*
+# .env
+# .env.*
 
 # IDEs and editors
 .vscode/

@@ -1,10 +1,13 @@
 from app.utils.logger import get_logger
 from app.schemas.evaluation_request import EvaluationRequest
 from ragas.metrics.collections import Faithfulness,AnswerRelevancy,ContextPrecisionWithoutReference,ContextUtilization
-from ragas import SingleTurnSample,EvaluationDataset,experiment
+from ragas import SingleTurnSample,experiment
 from typing import Dict
 import asyncio
 import time
+from ragas.llms import llm_factory
+from ragas.embeddings.base import embedding_factory
+from openai import AsyncOpenAI
 
 logger = get_logger(__name__)
 
@@ -36,8 +39,7 @@ class RagasEval:
                 Exception: If any metric evaluation fails during execution.
     """
     
-    def __init__(self,llm,embed_llm):
-        def __init__(self, llm, embed_llm):
+    def __init__(self):
             """
             Initialize the RagasEval evaluator with language model and embedding model.
             Args:
@@ -46,10 +48,15 @@ class RagasEval:
             Returns:
                 None
             """
+            client = AsyncOpenAI(
+            api_key="ollama",  # Ollama doesn't require a real key
+            base_url="http://localhost:11434/v1"
+            )
+            self.ragas_llm = llm_factory(model="gemma3:1b",provider="openai",client=client)
+        
+            self.ragas_embeddings = embedding_factory(provider="openai", model="embeddinggemma:latest", client=client)
 
-        self.ragas_llm = llm
-        self.ragas_embeddings = embed_llm
-        logger.info("Initialized RagasEval")
+            logger.info("Initialized RagasEval")
 
     
     async def eval(self, eval_request:EvaluationRequest):
