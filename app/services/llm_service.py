@@ -123,8 +123,11 @@ class LLMService:
                 raise ValueError("Provider must be specified to create chat model")
            
             if provider == "openai":
-                chat_model = ChatOpenAI(model=settings.llm_openai_model, temperature=settings.llm_temperature, 
-                                        max_tokens=settings.llm_max_tokens)
+                chat_model = ChatOpenAI(
+                    model=settings.llm_openai_model,
+                    temperature=settings.llm_temperature,
+                    max_completion_tokens=settings.llm_max_tokens,
+                )
             elif provider == "google":
                 chat_model = ChatGoogleGenerativeAI(model=settings.llm_gemini_model, temperature=settings.llm_temperature, 
                                                     max_tokens=settings.llm_max_tokens)
