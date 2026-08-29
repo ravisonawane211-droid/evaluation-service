@@ -15,7 +15,7 @@ COPY requirements.txt .
 
 # Install build deps, install Python deps, then remove build deps in the same RUN
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential && \
+    apt-get install -y --no-install-recommends build-essential git && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     apt-get purge -y --auto-remove build-essential && \
