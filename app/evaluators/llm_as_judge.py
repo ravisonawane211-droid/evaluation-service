@@ -3,7 +3,10 @@ from app.schemas.evaluation_request import EvaluationRequest
 from typing import List
 from app.schemas.rag_evaluation_model import RAGEvaluation
 from app.prompts.prompt import JUDGE_SYSTEM_PROMPT
-from langchain_ollama import ChatOllama
+from app.services.llm_service import LLMService
+from app.config.config import get_settings
+
+settings = get_settings()
 
 class LLMAsJudge:
     """
@@ -31,8 +34,10 @@ class LLMAsJudge:
             None
         """
         self.logger = get_logger(__name__)
-        self.judge_llm = ChatOllama(model="gemma3:1b",temperature=0)
-        self.logger.info("Initialized LLMAsJudge evaluator")
+        llm_service = LLMService()
+        self.judge_llm = llm_service.get_chat_model(provider=settings.provider)
+
+        self.logger.info(f"LLMAsJudge initialized with LLM provider: {settings.provider}")
         
 
     async def eval(self, eval_request: EvaluationRequest) -> RAGEvaluation:
@@ -47,24 +52,26 @@ class LLMAsJudge:
         Returns:
             RAGEvaluation object with scores and reasoning for all metrics
         """
-        self.logger.info("Starting evaluation using LLM-as-Judge")
+        try:
+            self.logger.info(f"Starting evaluation using LLM-as-Judge with provider: {settings.provider} and Judge as Model: {self.judge_llm}")
 
-        # Create messages for the judge
-        messages = [
-                {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
-                {"role": "user", "content": self.create_judge_prompt(eval_request.question, eval_request.contexts,
-                                                                     eval_request.answer)}
-            ]
+            # Create messages for the judge
+            messages = [
+                    {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
+                    {"role": "user", "content": self._create_judge_prompt(eval_request.question, eval_request.contexts,
+                                                                        eval_request.answer)}
+                ]
+                
+            # Use structured output parsing with Pydantic
+            response:RAGEvaluation = self.judge_llm.with_structured_output(RAGEvaluation).invoke(messages)
+
+            self.logger.info(f"Completed evaluation using LLM-as-Judge response : {response}")
+            return response.model_dump()
+        except Exception as e:
+            self.logger.error(f"Error during LLM-as-Judge evaluation: {e}", exc_info=True)
+            raise e
             
-        # Use structured output parsing with Pydantic
-        response:RAGEvaluation = self.judge_llm.with_structured_output(RAGEvaluation).invoke(messages)
-
-        self.logger.info(f"Completed evaluation using LLM-as-Judge response : {response}")
-            
-        return response.model_dump()
-
-
-    def create_judge_prompt(self, question: str, retrieved_contexts: List[str], generated_answer: str) -> str:
+    def _create_judge_prompt(self, question: str, retrieved_contexts: List[str], generated_answer: str) -> str:
         """
         Create the user prompt for the judge LLM.
         

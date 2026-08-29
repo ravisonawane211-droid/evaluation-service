@@ -6,4 +6,6 @@ class EvalMetric(BaseModel):
     question:str | None
     answer:str | None
     metric_name:str
-    metric_value:float    
+    metric_value:float
+    created_at:str
+    created_by:str

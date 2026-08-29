@@ -8,3 +8,5 @@ class EvaluationMetric(BaseModel):
     answer:str
     metric_name:str
     metric_value:float
+    created_at:str
+    created_by:str

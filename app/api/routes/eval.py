@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, BackgroundTasks
 from app.schemas.evaluation_request import EvaluationRequest
 from app.services.evaluation_service import EvaluationService
@@ -40,16 +42,17 @@ async def evaluate(eval_request: EvaluationRequest, background_tasks: Background
 
     logger.info(f"evaluating eval_request : {eval_request}")
     try:
-        database_service = DatabaseService(db_path=settings.database_url)
-        event_id = database_service.create_event(eval_request)
+        event_id = str(uuid.uuid4())
+        
+        evaluation_service = EvaluationService(event_id=event_id, eval_type=eval_request.eval_type)
 
-        evaluation_service = EvaluationService(event_id=event_id,eval_type=eval_request.eval_type)
-        background_tasks.add_task(evaluation_service.run_evaluation,event_id,eval_request)
+        background_tasks.add_task(evaluation_service.run_evaluation, eval_request)
+
     except Exception as e:
-        logger.error("error occurred while evaluate")
+        logger.error(f"error occurred while evaluate: {e}")
         raise e
     
-    logger.info("evaluation started in background")
+    logger.info(f"evaluation started in background for event_id : {event_id}")
     return {"message":"evaluation request accepted.", "status": "accepted", "event_id": event_id}
 
 
@@ -71,7 +74,6 @@ async def get_metrics(app_name: str):
             logger.error("app_name is required to fetch metrics")
             raise ValueError("app_name is required")
         
-
         evaluation_service = EvaluationService()
         metrics, metrics_thresholds = evaluation_service.get_metrics(app_name)
 

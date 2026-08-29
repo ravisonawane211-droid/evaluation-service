@@ -10,3 +10,4 @@ class EvaluationRequest(BaseModel):
     contexts: List[str] = Field(description="Retrieved contexts")
     metadata: Optional[Dict] = Field(default={},description="Metadata information")
     eval_type: Literal["Ragas","LLM-As-Judge"] = Field(description="Type of evaluation to be performed")
+    user_id: str = Field(description="User id who initiated the evaluation")

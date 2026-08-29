@@ -1,6 +1,7 @@
 
 from contextlib import contextmanager
 from pathlib import Path
+import time
 import sqlite3
 from typing import Iterator
 import uuid
@@ -9,8 +10,6 @@ from app.utils.logger import get_logger
 from app.schemas.evaluation_event import EvaluationEvent
 from app.schemas.evaluation_request import EvaluationRequest
 from app.schemas.evaluation_metric import EvaluationMetric
-from app.schemas.eval_metric import EvalMetric
-from app.schemas.app_config import AppConfig
 import pandas as pd
 from typing import Any
 import json
@@ -113,7 +112,7 @@ class DatabaseService:
         finally:
             conn.close()
 
-    def create_event(self,eval_request:EvaluationRequest):
+    def create_event(self,eval_request:EvaluationRequest, event_id: str):
         """
             Create a new evaluation event in the database.
             This method generates a unique event ID, constructs an EvaluationEvent object
@@ -135,7 +134,7 @@ class DatabaseService:
             """
 
         logger.info(f"creating event for eval_requst :{eval_request.request_id}")
-        event_id = str(uuid.uuid4())
+        
 
         try:
             event = EvaluationEvent(
@@ -145,6 +144,8 @@ class DatabaseService:
                 environment=eval_request.environment,
                 status="PENDING",
                 metadata=eval_request.metadata,
+                created_at=time.strftime("%Y-%m-%d %H:%M:%S"),
+                created_by=eval_request.user_id
             )
 
             df = pd.DataFrame.from_records([{
@@ -153,7 +154,9 @@ class DatabaseService:
                 "project_id": event.project_id,
                 "environment": event.environment,
                 "status": event.status,
-                "metadata": json.dumps(event.metadata)
+                "metadata": json.dumps(event.metadata),
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "created_by": eval_request.user_id
             }])
             count = df.to_sql(name=event.__tablename__, con=self.conn, if_exists="append", index=False)
             logger.info(f"created event with event info : {event} , {count}")
@@ -233,7 +236,9 @@ class DatabaseService:
                     question=eval_request.question,
                     answer=eval_request.answer,
                     metric_name=k,
-                    metric_value=v
+                    metric_value=v,
+                    created_at=time.strftime("%Y-%m-%d %H:%M:%S"),
+                    created_by=eval_request.user_id
                     ))
                 logger.info(f"Metric : {k} , Score: {v}")
             
@@ -257,7 +262,7 @@ class DatabaseService:
         logger.info(f"fetching metrics for app_name : {app_name}")
         try:
             query = """
-                SELECT DISTINCT ee.project_id,ee.environment,em.question,em.answer,em.metric_name, em.metric_value
+                SELECT DISTINCT ee.project_id,ee.environment,em.question,em.answer,em.metric_name, em.metric_value, em.created_at, em.created_by
                 FROM evaluation_metric em
                 JOIN evaluation_event ee ON em.event_id = ee.id
                 WHERE ee.project_id = ? and ee.status='COMPLETED'

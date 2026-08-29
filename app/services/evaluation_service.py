@@ -10,8 +10,8 @@ from app.evaluators.llm_as_judge import LLMAsJudge
 
 import yaml
 
-
 settings = get_settings()
+
 class EvaluationService:
     """
     EvaluationService handles RAG (Retrieval-Augmented Generation) evaluation operations.
@@ -49,17 +49,12 @@ class EvaluationService:
         self.event_id = event_id
         self.eval_type = eval_type
 
-        if self.eval_type == "Ragas":
-            self.ragas_eval = RagasEval()
-        elif self.eval_type == "LLM-As-Judge":
-            self.llm_as_judge = LLMAsJudge()
-        
         self.db_service = DatabaseService(db_path=settings.database_url)
         self.notifier_service = NotifierService()
         self.logger.info(f"Initialised EvaluationService with event_id : {event_id}")
 
 
-    async def run_evaluation(self,event_id:str, eval_request:EvaluationRequest):
+    async def run_evaluation(self,eval_request:EvaluationRequest):
         """
         Run evaluation for a given event based on eval_type and save results.
         Args:
@@ -76,12 +71,16 @@ class EvaluationService:
             - Logs evaluation progress and completion status
         """
 
-        self.logger.info(f"running evaluaiton on event_id : {event_id} using eval_type : {eval_request.eval_type}")
+        self.logger.info(f"running evaluaiton on event_id : {self.event_id} using eval_type : {eval_request.eval_type}")
 
-        if self.eval_type == "Ragas": 
-            eval_result = await self.ragas_eval.eval(eval_request=eval_request)
+        event_id = self.db_service.create_event(eval_request=eval_request, event_id=self.event_id)
+
+        if self.eval_type == "Ragas":
+            ragas_eval = RagasEval()
+            eval_result = await ragas_eval.eval(eval_request=eval_request)
         elif self.eval_type == "LLM-As-Judge":
-            eval_result = await self.llm_as_judge.eval(eval_request=eval_request)
+            llm_as_judge = LLMAsJudge()
+            eval_result = await llm_as_judge.eval(eval_request=eval_request)
 
         if eval_result:
             self.db_service.save_metrics(event_id, eval_result,eval_request)
@@ -113,7 +112,10 @@ class EvaluationService:
                     question=row["question"],
                     answer=row["answer"],
                     metric_name=row["metric_name"],
-                    metric_value=row["metric_value"]
+                    metric_value=row["metric_value"],
+                    
+                    created_at=row["created_at"],
+                    created_by=row["created_by"]
                 )
                 for row in metrics_rows
             ]

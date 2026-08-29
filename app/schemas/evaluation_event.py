@@ -8,3 +8,5 @@ class EvaluationEvent(BaseModel):
     environment : str
     status :str
     metadata:dict
+    created_at:str
+    created_by:str

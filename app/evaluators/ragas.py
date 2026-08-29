@@ -1,15 +1,16 @@
 from app.utils.logger import get_logger
 from app.schemas.evaluation_request import EvaluationRequest
-from ragas.metrics.collections import Faithfulness,AnswerRelevancy,ContextPrecisionWithoutReference,ContextUtilization
+from ragas.metrics.collections import Faithfulness,AnswerRelevancy,ContextPrecisionWithoutReference
 from ragas import SingleTurnSample,experiment
 from typing import Dict
 import asyncio
 import time
-from ragas.llms import llm_factory
-from ragas.embeddings.base import embedding_factory
-from openai import AsyncOpenAI
+
+from app.services.llm_service import LLMService
+from app.config.config import get_settings
 
 logger = get_logger(__name__)
+settings = get_settings()
 
 class RagasEval:
     """
@@ -48,15 +49,14 @@ class RagasEval:
             Returns:
                 None
             """
-            client = AsyncOpenAI(
-            api_key="ollama",  # Ollama doesn't require a real key
-            base_url="http://localhost:11434/v1"
-            )
-            self.ragas_llm = llm_factory(model="gemma3:1b",provider="openai",client=client)
-        
-            self.ragas_embeddings = embedding_factory(provider="openai", model="embeddinggemma:latest", client=client)
+            
+            llm_service = LLMService()
 
-            logger.info("Initialized RagasEval")
+            self.ragas_llm = llm_service.get_ragas_llm(provider=settings.provider)
+
+            self.ragas_embeddings = llm_service.get_ragas_embeddings(provider=settings.provider)
+        
+            logger.info(f"RagasEval initialized with LLM provider: {settings.provider}")
 
     
     async def eval(self, eval_request:EvaluationRequest):

@@ -15,19 +15,30 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # OpenAI Configuration
-    # openai_api_key: str
-
     # Google Configuration
     google_api_key: str
 
-    # Document Processing Settings
-    chunk_size: int = 500
-    chunk_overlap: int = 100
+    # OpenAI Configuration
+    openai_api_key: str
+    
+    provider: str = "openai"  # Default to OpenAI, can be overridden by .env
+
+    llm_max_tokens: int = 9216
 
     # Model Configuration
-    embedding_model: str = "gemini-embedding-001"
-    llm_model: str = "gemini-2.5-flash"
+    # Gemini Models
+    embedding_gemini_model: str = "gemini-embedding-001"
+    llm_gemini_model: str = "gemini-2.5-flash"
+
+    # OpenAI Models
+    llm_openai_model: str = "gpt-5-mini"
+    embedding_openai_model: str = "text-embedding-3-small"
+
+    # Ollama Models
+    ollama_url: str = "http://localhost:11434/v1"
+    llm_ollama_model: str = "gemma3:1b"
+    embedding_ollama_model: str = "embeddinggemma:latest"
+    
     llm_temperature: float = 0.0
 
     # Logging
@@ -37,9 +48,6 @@ class Settings(BaseSettings):
     enable_ragas_evaluation: bool = True
     ragas_timeout_seconds: float = 30.0
     ragas_log_results: bool = True
-    ragas_llm_model: str | None = "gemini-3-flash-preview"  # Defaults to llm_model if not set
-    ragas_llm_temperature: float | None = 0.0  # Defaults to llm_temperature if not set
-    ragas_embedding_model: str | None = "gemini-embedding-001"  # Defaults to embedding_model if not set
 
     # Alerts config
     project_alert_config_path:str = "./configs/thresholds.yaml"
@@ -59,6 +67,7 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    
 
 
 @lru_cache
