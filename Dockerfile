@@ -27,6 +27,7 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 # Copy application files
 COPY app/ $APP_HOME/app/
 COPY configs/ $APP_HOME/configs/
+COPY db/ $APP_HOME/db/
 
 # Fix ownership (use APP_HOME, not /app)
 RUN chown -R appuser:appgroup $APP_HOME
