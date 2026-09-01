@@ -125,8 +125,9 @@ class LLMService:
             if provider == "openai":
                 chat_model = ChatOpenAI(
                     model=settings.llm_openai_model,
-                    temperature=settings.llm_temperature,
-                    max_completion_tokens=settings.llm_max_tokens,
+                    model_kwargs={
+                    "max_completion_tokens": settings.llm_max_tokens,
+                }
                 )
             elif provider == "google":
                 chat_model = ChatGoogleGenerativeAI(model=settings.llm_gemini_model, temperature=settings.llm_temperature, 
