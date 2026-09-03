@@ -125,6 +125,7 @@ class LLMService:
             if provider == "openai":
                 chat_model = ChatOpenAI(
                     model=settings.llm_openai_model,
+                    temperature=1,
                     model_kwargs={
                     "max_completion_tokens": settings.llm_max_tokens,
                 }
