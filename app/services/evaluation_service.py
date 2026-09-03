@@ -114,7 +114,7 @@ class EvaluationService:
                     metric_name=row["metric_name"],
                     metric_value=round(float(row["metric_value"]), 2),
                     
-                    created_at=row["created_at"],
+                    created_at=row["created_at"].isoformat(sep=" "),
                     created_by=row["created_by"]
                 )
                 for row in metrics_rows
