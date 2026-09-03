@@ -3,6 +3,7 @@ uvicorn
 pydantic
 sqlalchemy
 psycopg2-binary
+sqlglot
 pyyaml
 langchain
 langchain-google-genai

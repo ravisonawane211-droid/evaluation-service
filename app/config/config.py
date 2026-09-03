@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
 
     # Database Settings
-    database_url: str = "./db/evaluation.db"
+    database_url: str
 
     #JWT Config
     secret_key: str
