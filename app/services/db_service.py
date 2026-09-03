@@ -236,7 +236,7 @@ class DatabaseService:
                     question=eval_request.question,
                     answer=eval_request.answer,
                     metric_name=k,
-                    metric_value=v,
+                    metric_value=round(float(v), 2),
                     created_at=time.strftime("%Y-%m-%d %H:%M:%S"),
                     created_by=eval_request.user_id
                     ))
