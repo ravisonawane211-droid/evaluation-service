@@ -265,7 +265,14 @@ class DatabaseService:
                 SELECT DISTINCT ee.project_id,ee.environment,em.question,em.answer,em.metric_name, em.metric_value, em.created_at, em.created_by
                 FROM evaluation_metric em
                 JOIN evaluation_event ee ON em.event_id = ee.id
-                WHERE ee.project_id = ? and ee.status='COMPLETED'
+                WHERE ee.id = (
+                    SELECT id
+                    FROM evaluation_event
+                    WHERE project_id = ? AND status = 'COMPLETED'
+                    ORDER BY created_at DESC, rowid DESC
+                    LIMIT 1
+                )
+                ORDER BY em.created_at DESC, em.metric_name
             """
             cursor = self.conn.execute(query, (app_name,))
             metrics = cursor.fetchall()
