@@ -40,7 +40,7 @@ class LLMAsJudge:
         self.logger.info(f"LLMAsJudge initialized with LLM provider: {settings.provider}")
         
 
-    async def eval(self, eval_request: EvaluationRequest) -> RAGEvaluation:
+    async def eval(self, eval_request: EvaluationRequest) -> dict[str, float]:
         """
         Evaluate a single RAG interaction using LLM-as-Judge.
         
@@ -63,10 +63,13 @@ class LLMAsJudge:
                 ]
                 
             # Use structured output parsing with Pydantic
-            response:RAGEvaluation = self.judge_llm.with_structured_output(RAGEvaluation).invoke(messages)
+            response: RAGEvaluation = self.judge_llm.with_structured_output(RAGEvaluation).invoke(messages)
 
             self.logger.info(f"Completed evaluation using LLM-as-Judge response : {response}")
-            return response.model_dump()
+            return {
+                metric_name: float(metric.score.value)
+                for metric_name, metric in response
+            }
         except Exception as e:
             self.logger.error(f"Error during LLM-as-Judge evaluation: {e}", exc_info=True)
             raise e
