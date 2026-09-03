@@ -67,7 +67,7 @@ class LLMAsJudge:
 
             self.logger.info(f"Completed evaluation using LLM-as-Judge response : {response}")
             return {
-                metric_name: float(metric.score.value)
+                metric_name: float(metric.score.value) / 3.0
                 for metric_name, metric in response
             }
         except Exception as e:
