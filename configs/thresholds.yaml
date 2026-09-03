@@ -1,4 +1,4 @@
 rbac_chatbot:
   faithfulness: 0.75
   context_precision: 0.6
-  answer_relevance: 0.7
+  answer_relevancy: 0.7
